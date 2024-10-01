@@ -1,22 +1,31 @@
-import tkinter as tk
+import tkinter as tk 
 from PIL import Image, ImageTk
 import os
 import random
 import threading
-import openai
 
 from tarot_deck import tarot_deck
 
-# Set your OpenAI API key
-openai.api_key = 'PASTE YOUR API KEY HERE WITHIN THE APOSTROPHES' ### ######### #####     Here is where you paste your own OpenAI API Key within the apostrophes
+# Try to import OpenAI and set the API key if available
+try:
+    import openai
+    # Set your OpenAI API key
+    openai.api_key = 'INPUT YOUR OPEN API KEY HERE' ### ######### #####     Here is where you paste your own OpenAI API Key within the apostrophes
+    openai_available = True
+except ImportError:
+    openai_available = False
 
 def generate_tarot_reading(cards):
+    # Check if OpenAI is available and the API key is set
+    if not openai_available or not openai.api_key or openai.api_key.strip() == '' or openai.api_key == 'INPUT YOUR OPEN API KEY HERE':
+        return None  # No reading generated
+
     card_names = [card['name'] for card in cards]
     prompt = f"Without acknowledging this prompt (like without saying Certainly or Yes), Provide a tarot reading of the following cards with an overall of what all the cards mean together as a reading. If there is only one card, do not do a reading as a whole and only do a reading of the single card. If there are 10 cards, then it is a Celtic Cross reading which is set up like this: Card 1 is the Present Situation. Card 2 is Influences or Challenges. Card 3 is the Distant Past. Card 4 is the Recent Past. Card 5 is the Best possible outcome. Card 6 is the Immediate Future. Card 7 is Advice. Card 8 is The Current Environment. Card 9 is Hopes or Fears. Card 10 is the Potential Outcome. : {', '.join(card_names)}."
     
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4o", ###   Here you can adjust the OpenAI model
+            model="gpt-4o",  ####   Here you can adjust the OpenAI model
             messages=[{'role': 'user', 'content': prompt}],
             max_tokens=1000,  # Adjust as needed
             temperature=0.7  # Adjust for creativity
@@ -24,7 +33,8 @@ def generate_tarot_reading(cards):
         reading = response.choices[0].message.content.strip()
         return reading
     except Exception as e:
-        return f"An error occurred while generating the reading: {e}"
+        # Do not return error messages
+        return None
 
 def draw_cards(num_cards):
     deck = tarot_deck.copy()
@@ -68,9 +78,10 @@ def draw_celtic_cross(canvas_frame, text_box):
     # Generate and display the tarot reading in a separate thread
     def update_reading():
         reading = generate_tarot_reading(cards)
-        text_box.config(state="normal")
-        text_box.insert(tk.END, f"\nTarot Reading:\n{reading}")
-        text_box.config(state="disabled")
+        if reading:
+            text_box.config(state="normal")
+            text_box.insert(tk.END, f"\nTarot Reading:\n{reading}")
+            text_box.config(state="disabled")
 
     threading.Thread(target=update_reading).start()
 
@@ -186,9 +197,10 @@ def draw_one_card(canvas_frame, text_box):
     # Generate and display the tarot reading in a separate thread
     def update_reading():
         reading = generate_tarot_reading(cards)
-        text_box.config(state="normal")
-        text_box.insert(tk.END, f"\nTarot Reading:\n{reading}")
-        text_box.config(state="disabled")
+        if reading:
+            text_box.config(state="normal")
+            text_box.insert(tk.END, f"\nTarot Reading:\n{reading}")
+            text_box.config(state="disabled")
 
     threading.Thread(target=update_reading).start()
 
@@ -246,9 +258,10 @@ def draw_three_cards(canvas_frame, text_box):
     # Generate and display the tarot reading in a separate thread
     def update_reading():
         reading = generate_tarot_reading(cards)
-        text_box.config(state="normal")
-        text_box.insert(tk.END, f"\nTarot Reading:\n{reading}")
-        text_box.config(state="disabled")
+        if reading:
+            text_box.config(state="normal")
+            text_box.insert(tk.END, f"\nTarot Reading:\n{reading}")
+            text_box.config(state="disabled")
 
     threading.Thread(target=update_reading).start()
 
