@@ -10,22 +10,29 @@ from tarot_deck import tarot_deck
 try:
     import openai
     # Set your OpenAI API key
-    openai.api_key = 'INPUT YOUR OPEN API KEY HERE' ### ######### #####     Here is where you paste your own OpenAI API Key within the apostrophes
+    openai.api_key = 'INPUT YOUR OPEN API KEY HERE' ### *** Here is where you add your OpenAI API Key within the apostrophes. Only put it here and not the other place that it says to input your openai key here. That place is just for error handling.
     openai_available = True
 except ImportError:
     openai_available = False
 
-def generate_tarot_reading(cards):
+def generate_tarot_reading(cards, query):
     # Check if OpenAI is available and the API key is set
-    if not openai_available or not openai.api_key or openai.api_key.strip() == '' or openai.api_key == 'INPUT YOUR OPEN API KEY HERE':
+    if not openai_available or not openai.api_key or openai.api_key.strip() == '' or openai.api_key == 'INPUT YOUR OPEN API KEY HERE': ### Do not put your openAI API key here, put it above in the   # Set your OpenAI API Key
         return None  # No reading generated
 
     card_names = [card['name'] for card in cards]
-    prompt = f"Without acknowledging this prompt (like without saying Certainly or Yes), Provide a tarot reading of the following cards with an overall of what all the cards mean together as a reading. If there is only one card, do not do a reading as a whole and only do a reading of the single card. If there are 10 cards, then it is a Celtic Cross reading which is set up like this: Card 1 is the Present Situation. Card 2 is Influences or Challenges. Card 3 is the Distant Past. Card 4 is the Recent Past. Card 5 is the Best possible outcome. Card 6 is the Immediate Future. Card 7 is Advice. Card 8 is The Current Environment. Card 9 is Hopes or Fears. Card 10 is the Potential Outcome. : {', '.join(card_names)}."
     
+    # Include the user's query in the prompt
+    if query.strip():
+        prompt = f"The querent is asking about: {query.strip()}\n"
+    else:
+        prompt = "The querent does not have a specific question.\n"
+
+    prompt += f"Without acknowledging this prompt (like without saying Certainly or Yes), provide a tarot reading of the following cards with an overall of what all the cards mean together as a reading. If there are three cards; do a reading of all three. If there is only one card, do not do a reading as a whole and only do a reading of the single card. If there are 10 cards, then it is a Celtic Cross reading which is set up like this: Card 1 is the Present Situation. Card 2 is Influences or Challenges. Card 3 is the Distant Past. Card 4 is the Recent Past. Card 5 is the Best possible outcome. Card 6 is the Immediate Future. Card 7 is Advice. Card 8 is The Current Environment. Card 9 is Hopes or Fears. Card 10 is the Potential Outcome. : {', '.join(card_names)}."
+
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4o",  ####   Here you can adjust the OpenAI model
+            model="gpt-4o", #### Here you can modify the GPT model
             messages=[{'role': 'user', 'content': prompt}],
             max_tokens=1000,  # Adjust as needed
             temperature=0.7  # Adjust for creativity
@@ -41,7 +48,7 @@ def draw_cards(num_cards):
     random.SystemRandom().shuffle(deck)
     return deck[:num_cards]
 
-def draw_celtic_cross(canvas_frame, text_box):
+def draw_celtic_cross(canvas_frame, text_box, query_entry):
     for widget in canvas_frame.winfo_children():
         widget.destroy()
     cards = draw_cards(10)
@@ -75,9 +82,12 @@ def draw_celtic_cross(canvas_frame, text_box):
     text_box.insert("1.0", card_meanings)
     text_box.config(state="disabled")
 
+    # Get the user's query
+    user_query = query_entry.get()
+
     # Generate and display the tarot reading in a separate thread
     def update_reading():
-        reading = generate_tarot_reading(cards)
+        reading = generate_tarot_reading(cards, user_query)
         if reading:
             text_box.config(state="normal")
             text_box.insert(tk.END, f"\nTarot Reading:\n{reading}")
@@ -173,7 +183,7 @@ def redraw_celtic_cross(canvas, images):
         canvas.create_image(x, y, image=resized_images[i], anchor='nw')
     canvas.images = resized_images
 
-def draw_one_card(canvas_frame, text_box):
+def draw_one_card(canvas_frame, text_box, query_entry):
     for widget in canvas_frame.winfo_children():
         widget.destroy()
     cards = draw_cards(1)
@@ -194,9 +204,12 @@ def draw_one_card(canvas_frame, text_box):
     text_box.insert("1.0", card_meanings)
     text_box.config(state="disabled")
 
+    # Get the user's query
+    user_query = query_entry.get()
+
     # Generate and display the tarot reading in a separate thread
     def update_reading():
-        reading = generate_tarot_reading(cards)
+        reading = generate_tarot_reading(cards, user_query)
         if reading:
             text_box.config(state="normal")
             text_box.insert(tk.END, f"\nTarot Reading:\n{reading}")
@@ -230,7 +243,7 @@ def redraw_one_card(canvas, images):
     canvas.create_image(image_x, image_y, image=resized_image, anchor='nw')
     canvas.images = [resized_image]
 
-def draw_three_cards(canvas_frame, text_box):
+def draw_three_cards(canvas_frame, text_box, query_entry):
     for widget in canvas_frame.winfo_children():
         widget.destroy()
     cards = draw_cards(3)
@@ -255,9 +268,12 @@ def draw_three_cards(canvas_frame, text_box):
     text_box.insert("1.0", card_meanings)
     text_box.config(state="disabled")
 
+    # Get the user's query
+    user_query = query_entry.get()
+
     # Generate and display the tarot reading in a separate thread
     def update_reading():
-        reading = generate_tarot_reading(cards)
+        reading = generate_tarot_reading(cards, user_query)
         if reading:
             text_box.config(state="normal")
             text_box.insert(tk.END, f"\nTarot Reading:\n{reading}")
@@ -330,10 +346,22 @@ def setup_main_gui(root, spread_type=None):
     right_frame = tk.Frame(content_frame, width=245)
     right_frame.grid(row=0, column=1, sticky="nsew")
     right_frame.grid_propagate(False)
-    right_frame.grid_rowconfigure(0, weight=1)
+
+    # Adjust grid weights for right_frame
+    right_frame.grid_rowconfigure(1, weight=0)
+    right_frame.grid_rowconfigure(2, weight=1)  # Text frame
+    right_frame.grid_rowconfigure(3, weight=0)  # Buttons frame
     right_frame.grid_columnconfigure(0, weight=1)
+
+    # Query input field
+    query_label = tk.Label(right_frame, text="Enter your query:")
+    query_label.grid(row=0, column=0, padx=6, pady=2, sticky="w")
+
+    query_entry = tk.Entry(right_frame, width=30)
+    query_entry.grid(row=1, column=0, padx=10, pady=4, sticky="we")
+
     text_frame = tk.Frame(right_frame)
-    text_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+    text_frame.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
     text_frame.grid_rowconfigure(0, weight=1)
     text_frame.grid_columnconfigure(0, weight=1)
     text_box = tk.Text(text_frame, wrap="word", font=("Courier New", 10), width=37)
@@ -341,39 +369,40 @@ def setup_main_gui(root, spread_type=None):
     scrollbar = tk.Scrollbar(text_frame, orient="vertical", command=text_box.yview)
     scrollbar.grid(row=0, column=1, sticky="ns")
     text_box.config(yscrollcommand=scrollbar.set)
-    text_box.config(state="normal")
+    text_box.config(state="disabled")
+
     buttons_frame = tk.Frame(right_frame)
-    buttons_frame.grid(row=1, column=0, padx=5, pady=(5, 10), sticky="n")
+    buttons_frame.grid(row=3, column=0, padx=5, pady=(5, 10), sticky="n")
     draw_one_card_button = tk.Button(
         buttons_frame,
         text="Draw One Card",
         width=20,
-        command=lambda: draw_one_card(canvas_frame, text_box)
+        command=lambda: draw_one_card(canvas_frame, text_box, query_entry)
     )
     draw_one_card_button.pack(pady=5)
     draw_three_cards_button = tk.Button(
         buttons_frame,
         text="Draw Three Cards",
         width=20,
-        command=lambda: draw_three_cards(canvas_frame, text_box)
+        command=lambda: draw_three_cards(canvas_frame, text_box, query_entry)
     )
     draw_three_cards_button.pack(pady=5)
     draw_celtic_button = tk.Button(
         buttons_frame,
         text="Draw Celtic Cross",
         width=20,
-        command=lambda: draw_celtic_cross(canvas_frame, text_box)
+        command=lambda: draw_celtic_cross(canvas_frame, text_box, query_entry)
     )
     draw_celtic_button.pack(pady=5)
     if spread_type is None:
         add_placeholder(canvas_frame)
     else:
         if spread_type == "celtic":
-            draw_celtic_cross(canvas_frame, text_box)
+            draw_celtic_cross(canvas_frame, text_box, query_entry)
         elif spread_type == "one":
-            draw_one_card(canvas_frame, text_box)
+            draw_one_card(canvas_frame, text_box, query_entry)
         elif spread_type == "three":
-            draw_three_cards(canvas_frame, text_box)
+            draw_three_cards(canvas_frame, text_box, query_entry)
 
 def add_placeholder(canvas_frame):
     try:
