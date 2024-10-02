@@ -10,7 +10,7 @@ from tarot_deck import tarot_deck
 try:
     import openai
     # Set your OpenAI API key
-    openai.api_key = 'INPUT YOUR OPEN API KEY HERE' ### *** Here is where you add your OpenAI API Key within the apostrophes. Only put it here and not the other place that it says to input your openai key here. That place is just for error handling.
+    openai.api_key = 'INPUT YOUR OPEN API KEY HERE' ### Here is where you add your OpenAI API Key within the apostrophes
     openai_available = True
 except ImportError:
     openai_available = False
@@ -34,7 +34,7 @@ def generate_tarot_reading(cards, query):
         response = openai.ChatCompletion.create(
             model="gpt-4o", #### Here you can modify the GPT model
             messages=[{'role': 'user', 'content': prompt}],
-            max_tokens=1000,  # Adjust as needed
+            max_tokens=5000,  # Adjust as needed
             temperature=0.7  # Adjust for creativity
         )
         reading = response.choices[0].message.content.strip()
@@ -372,28 +372,28 @@ def setup_main_gui(root, spread_type=None):
     text_box.config(state="disabled")
 
     buttons_frame = tk.Frame(right_frame)
-    buttons_frame.grid(row=3, column=0, padx=5, pady=(5, 10), sticky="n")
+    buttons_frame.grid(row=3, column=0, padx=5, pady=(1, 10), sticky="n")
     draw_one_card_button = tk.Button(
         buttons_frame,
         text="Draw One Card",
         width=20,
         command=lambda: draw_one_card(canvas_frame, text_box, query_entry)
     )
-    draw_one_card_button.pack(pady=5)
+    draw_one_card_button.pack(pady=3)
     draw_three_cards_button = tk.Button(
         buttons_frame,
         text="Draw Three Cards",
         width=20,
         command=lambda: draw_three_cards(canvas_frame, text_box, query_entry)
     )
-    draw_three_cards_button.pack(pady=5)
+    draw_three_cards_button.pack(pady=3)
     draw_celtic_button = tk.Button(
         buttons_frame,
         text="Draw Celtic Cross",
         width=20,
         command=lambda: draw_celtic_cross(canvas_frame, text_box, query_entry)
     )
-    draw_celtic_button.pack(pady=5)
+    draw_celtic_button.pack(pady=3)
     if spread_type is None:
         add_placeholder(canvas_frame)
     else:
